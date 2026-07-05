@@ -1,17 +1,18 @@
 package com.mamahealth.security;
 
+import java.nio.charset.StandardCharsets;
+import java.util.Date;
+import java.util.function.Function;
 
-import io.jsonwebtoken.Jwts;
-
+import javax.crypto.SecretKey;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import javax.crypto.SecretKey;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
-
-import java.nio.charset.StandardCharsets;
-import java.util.Date;
 
 @Service
 public class JwtService {
@@ -22,29 +23,118 @@ public class JwtService {
     @Value("${jwt.expiration}")
     private long jwtExpiration;
 
+    /**
+     * Secret signing key
+     */
     private SecretKey getSigningKey() {
+
         return Keys.hmacShaKeyFor(
-                jwtSecret.getBytes(StandardCharsets.UTF_8)
-        );
+                jwtSecret.getBytes(StandardCharsets.UTF_8));
     }
 
-    public String generateToken(Long userId, String role) {
+    /**
+     * Generate JWT
+     */
+    public String generateToken(String email, String role) {
 
-        return Jwts.builder()
+    return Jwts.builder()
 
-                .subject(userId.toString())
+            .subject(email)
 
-                .claim("role", role)
+            .claim("role", role)
 
-                .issuedAt(new Date())
+            .issuedAt(new Date())
 
-                .expiration(new Date(
-                        System.currentTimeMillis() + jwtExpiration))
+            .expiration(
+                    new Date(System.currentTimeMillis() + jwtExpiration))
 
-                .signWith(getSigningKey())
+            .signWith(getSigningKey(), SignatureAlgorithm.HS256)
 
-                .compact();
+            .compact();
+}
 
+    /**
+     * Extract all claims
+     */
+    public Claims extractAllClaims(String token) {
+
+        return Jwts.parser()
+
+                .verifyWith(getSigningKey())
+
+                .build()
+
+                .parseSignedClaims(token)
+
+                .getPayload();
     }
 
+    /**
+     * Generic claim extractor
+     */
+    public <T> T extractClaim(
+            String token,
+            Function<Claims, T> claimsResolver) {
+
+        Claims claims = extractAllClaims(token);
+
+        return claimsResolver.apply(claims);
+    }
+
+    /**
+     * Extract User ID
+     */
+    public String extractEmail(String token) {
+
+    return extractClaim(token, Claims::getSubject);
+    }
+
+    /**
+     * Extract User Role
+     */
+    public String extractRole(String token) {
+
+        return extractClaim(
+
+                token,
+
+                claims -> claims.get("role", String.class));
+    }
+
+    /**
+     * Extract Expiration
+     */
+    public Date extractExpiration(String token) {
+
+        return extractClaim(
+
+                token,
+
+                Claims::getExpiration);
+    }
+
+    /**
+     * Check expiration
+     */
+    public boolean isTokenExpired(String token) {
+
+        return extractExpiration(token)
+
+                .before(new Date());
+    }
+
+    /**
+     * Validate JWT
+     */
+    public boolean isTokenValid(String token) {
+
+        try {
+
+            return !isTokenExpired(token);
+
+        } catch (Exception ex) {
+
+            return false;
+        }
+    }
 }
