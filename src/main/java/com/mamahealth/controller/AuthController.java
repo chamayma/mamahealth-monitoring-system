@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.mamahealth.dto.auth.LoginRequest;
 import com.mamahealth.dto.auth.SignupRequest;
 import com.mamahealth.service.AuthService;
 
@@ -26,5 +27,13 @@ public class AuthController {
         String response = authService.signup(request);
 
         return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<String> login(@Valid @RequestBody LoginRequest request) {
+
+    String response = authService.login(request);
+
+    return ResponseEntity.ok(response);
     }
 }

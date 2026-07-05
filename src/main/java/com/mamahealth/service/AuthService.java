@@ -3,6 +3,7 @@ package com.mamahealth.service;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.mamahealth.dto.auth.LoginRequest;
 import com.mamahealth.dto.auth.SignupRequest;
 import com.mamahealth.entity.Role;
 import com.mamahealth.entity.User;
@@ -42,5 +43,21 @@ public class AuthService {
         userRepository.save(user);
 
         return "User registered successfully";
+    }
+
+    public String login(LoginRequest request) {
+
+    User user = userRepository.findByEmail(request.getEmail())
+            .orElse(null);
+
+    if (user == null) {
+        return "User not found";
+    }
+
+    if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+        return "Invalid password";
+    }
+
+    return "Login successful";
     }
 }
