@@ -2,9 +2,11 @@ package com.mamahealth.security;
 
 import java.io.IOException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -18,6 +20,9 @@ import jakarta.servlet.http.HttpServletResponse;
 
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
+
+    private static final Logger logger =
+            LoggerFactory.getLogger(JwtAuthenticationFilter.class);
 
     private final JwtService jwtService;
     private final CustomUserDetailsService customUserDetailsService;
@@ -36,8 +41,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             HttpServletResponse response,
             FilterChain filterChain)
             throws ServletException, IOException {
-                 System.out.println("===== JWT FILTER =====");
-    System.out.println("Request URI: " + request.getRequestURI());
+
+        logger.info("JWT Filter processing request: {}", request.getRequestURI());
 
         String authHeader = request.getHeader("Authorization");
 
@@ -56,8 +61,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             if (email != null
                     && SecurityContextHolder.getContext().getAuthentication() == null) {
 
-                UserDetails userDetails =
-                        customUserDetailsService.loadUserByUsername(email);
+                CustomUserDetails userDetails =
+                        (CustomUserDetails) customUserDetailsService.loadUserByUsername(email);
 
                 if (jwtService.isTokenValid(token)) {
 
@@ -73,13 +78,20 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
                     SecurityContextHolder.getContext()
                             .setAuthentication(authentication);
+
+                    logger.info(
+                            "Authenticated user '{}' with role '{}'",
+                            email,
+                            userDetails.getUser().getRole());
                 }
+
             }
 
         } catch (JwtException | IllegalArgumentException ex) {
 
-            SecurityContextHolder.clearContext();
+            logger.warn("Invalid JWT token: {}", ex.getMessage());
 
+            SecurityContextHolder.clearContext();
         }
 
         filterChain.doFilter(request, response);

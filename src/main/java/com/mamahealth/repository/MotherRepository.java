@@ -10,5 +10,5 @@ import com.mamahealth.entity.User;
 public interface MotherRepository extends JpaRepository<Mother, Long> {
 
     Optional<Mother> findByUser(User user);
-
+    Optional<Mother> findByUserAndActiveTrue(User user);
 }

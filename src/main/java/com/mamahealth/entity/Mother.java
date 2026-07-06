@@ -37,6 +37,9 @@ public class Mother {
     @Column(nullable = false)
     private String hospitalName;
 
+    @Column(nullable = false)
+    private Boolean active = true;
+
     @OneToOne
     @JoinColumn(name = "user_id", nullable = false, unique = true)
     private User user;
