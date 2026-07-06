@@ -5,41 +5,78 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import org.springframework.web.bind.MethodArgumentNotValidException;
-
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
-        @ExceptionHandler(MethodArgumentNotValidException.class)
-public ResponseEntity<Map<String, Object>> handleValidationException(
-        MethodArgumentNotValidException ex) {
 
-    Map<String, String> errors = new HashMap<>();
+    /**
+     * Validation Errors
+     */
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<Map<String, Object>> handleValidationException(
+            MethodArgumentNotValidException ex) {
 
-    ex.getBindingResult()
-            .getFieldErrors()
-            .forEach(error ->
+        Map<String, String> errors = new HashMap<>();
 
-                    errors.put(
-                            error.getField(),
-                            error.getDefaultMessage()));
+        ex.getBindingResult()
+                .getFieldErrors()
+                .forEach(error ->
+                        errors.put(
+                                error.getField(),
+                                error.getDefaultMessage()));
 
-    Map<String, Object> response = new LinkedHashMap<>();
+        Map<String, Object> response = new LinkedHashMap<>();
 
-    response.put("success", false);
-    response.put("message", "Validation failed");
-    response.put("errors", errors);
-    response.put("timestamp", LocalDateTime.now());
+        response.put("success", false);
+        response.put("message", "Validation failed");
+        response.put("errors", errors);
+        response.put("timestamp", LocalDateTime.now());
 
-    return ResponseEntity
-            .badRequest()
-            .body(response);
-}
+        return ResponseEntity.badRequest().body(response);
+    }
 
+    /**
+     * Resource Not Found
+     */
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleResourceNotFound(
+            ResourceNotFoundException ex) {
+
+        Map<String, Object> response = new LinkedHashMap<>();
+
+        response.put("success", false);
+        response.put("message", ex.getMessage());
+        response.put("data", null);
+        response.put("timestamp", LocalDateTime.now());
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+    }
+
+    /**
+     * Duplicate Resource
+     */
+    @ExceptionHandler(DuplicateResourceException.class)
+    public ResponseEntity<Map<String, Object>> handleDuplicateResource(
+            DuplicateResourceException ex) {
+
+        Map<String, Object> response = new LinkedHashMap<>();
+
+        response.put("success", false);
+        response.put("message", ex.getMessage());
+        response.put("data", null);
+        response.put("timestamp", LocalDateTime.now());
+
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
+    }
+
+    /**
+     * Other Runtime Exceptions
+     */
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<Map<String, Object>> handleRuntimeException(
             RuntimeException ex) {
@@ -51,11 +88,12 @@ public ResponseEntity<Map<String, Object>> handleValidationException(
         response.put("data", null);
         response.put("timestamp", LocalDateTime.now());
 
-        return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
-                .body(response);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
 
+    /**
+     * Unexpected Errors
+     */
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, Object>> handleException(
             Exception ex) {
@@ -67,8 +105,6 @@ public ResponseEntity<Map<String, Object>> handleValidationException(
         response.put("data", null);
         response.put("timestamp", LocalDateTime.now());
 
-        return ResponseEntity
-                .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(response);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
     }
 }
