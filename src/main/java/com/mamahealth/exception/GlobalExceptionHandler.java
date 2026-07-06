@@ -1,8 +1,6 @@
 package com.mamahealth.exception;
 
-import java.time.LocalDateTime;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.springframework.http.HttpStatus;
@@ -11,6 +9,8 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import com.mamahealth.dto.common.ApiResponse;
+
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -18,93 +18,66 @@ public class GlobalExceptionHandler {
      * Validation Errors
      */
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<Map<String, Object>> handleValidationException(
-            MethodArgumentNotValidException ex) {
+public ResponseEntity<ApiResponse<Void>> handleValidationException(
+        MethodArgumentNotValidException ex) {
 
-        Map<String, String> errors = new HashMap<>();
+    Map<String, String> errors = new HashMap<>();
 
-        ex.getBindingResult()
-                .getFieldErrors()
-                .forEach(error ->
-                        errors.put(
-                                error.getField(),
-                                error.getDefaultMessage()));
+    ex.getBindingResult()
+            .getFieldErrors()
+            .forEach(error ->
+                    errors.put(
+                            error.getField(),
+                            error.getDefaultMessage()));
 
-        Map<String, Object> response = new LinkedHashMap<>();
-
-        response.put("success", false);
-        response.put("message", "Validation failed");
-        response.put("errors", errors);
-        response.put("timestamp", LocalDateTime.now());
-
-        return ResponseEntity.badRequest().body(response);
-    }
+    return ResponseEntity.badRequest()
+            .body(ApiResponse.validationError(
+                    "Validation failed",
+                    errors));
+}
 
     /**
      * Resource Not Found
      */
     @ExceptionHandler(ResourceNotFoundException.class)
-    public ResponseEntity<Map<String, Object>> handleResourceNotFound(
+    public ResponseEntity<ApiResponse<Void>> handleResourceNotFound(
             ResourceNotFoundException ex) {
 
-        Map<String, Object> response = new LinkedHashMap<>();
-
-        response.put("success", false);
-        response.put("message", ex.getMessage());
-        response.put("data", null);
-        response.put("timestamp", LocalDateTime.now());
-
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(ApiResponse.error(ex.getMessage()));
     }
 
     /**
      * Duplicate Resource
      */
     @ExceptionHandler(DuplicateResourceException.class)
-    public ResponseEntity<Map<String, Object>> handleDuplicateResource(
+    public ResponseEntity<ApiResponse<Void>> handleDuplicateResource(
             DuplicateResourceException ex) {
 
-        Map<String, Object> response = new LinkedHashMap<>();
-
-        response.put("success", false);
-        response.put("message", ex.getMessage());
-        response.put("data", null);
-        response.put("timestamp", LocalDateTime.now());
-
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(ApiResponse.error(ex.getMessage()));
     }
 
     /**
-     * Other Runtime Exceptions
+     * Runtime Exception
      */
     @ExceptionHandler(RuntimeException.class)
-    public ResponseEntity<Map<String, Object>> handleRuntimeException(
+    public ResponseEntity<ApiResponse<Void>> handleRuntimeException(
             RuntimeException ex) {
 
-        Map<String, Object> response = new LinkedHashMap<>();
-
-        response.put("success", false);
-        response.put("message", ex.getMessage());
-        response.put("data", null);
-        response.put("timestamp", LocalDateTime.now());
-
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(ApiResponse.error(ex.getMessage()));
     }
 
     /**
-     * Unexpected Errors
+     * Unexpected Exception
      */
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<Map<String, Object>> handleException(
+    public ResponseEntity<ApiResponse<Void>> handleException(
             Exception ex) {
 
-        Map<String, Object> response = new LinkedHashMap<>();
-
-        response.put("success", false);
-        response.put("message", "Unexpected server error");
-        response.put("data", null);
-        response.put("timestamp", LocalDateTime.now());
-
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(ApiResponse.error("Unexpected server error"));
     }
+
 }

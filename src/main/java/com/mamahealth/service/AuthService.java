@@ -9,6 +9,7 @@ import com.mamahealth.dto.auth.LoginRequest;
 import com.mamahealth.dto.auth.SignupRequest;
 import com.mamahealth.entity.Role;
 import com.mamahealth.entity.User;
+import com.mamahealth.exception.DuplicateResourceException;
 import com.mamahealth.repository.UserRepository;
 import com.mamahealth.security.JwtService;
 
@@ -39,9 +40,12 @@ public class AuthService {
      */
     public String signup(SignupRequest request) {
 
-        if (userRepository.findByEmail(request.getEmail()).isPresent()) {
-            return "Email already exists";
-        }
+       if (userRepository.findByEmail(request.getEmail()).isPresent()) {
+
+    throw new DuplicateResourceException(
+            "Email already exists");
+
+    }
 
         User user = new User();
 
