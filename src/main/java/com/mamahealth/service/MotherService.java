@@ -1,5 +1,7 @@
 package com.mamahealth.service;
 
+import java.util.List;
+
 import org.springframework.stereotype.Service;
 
 import com.mamahealth.dto.mother.CreateMotherRequest;
@@ -112,4 +114,26 @@ public class MotherService {
 
         motherRepository.save(mother);
     }
+
+    public List<MotherResponse> getAllMothers() {
+
+    return motherRepository
+            .findByActiveTrueOrderByFullNameAsc()
+            .stream()
+            .map(motherMapper::toResponse)
+            .toList();
+
+}
+
+public MotherResponse getMotherById(Long id) {
+
+    Mother mother = motherRepository
+            .findById(id)
+            .orElseThrow(() ->
+                    new ResourceNotFoundException("Mother not found"));
+
+    return motherMapper.toResponse(mother);
+
+}
+
 }

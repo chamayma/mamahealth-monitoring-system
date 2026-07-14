@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import com.mamahealth.dto.recovery.CreateRecoveryRequest;
 import com.mamahealth.dto.recovery.RecoveryResponse;
 import com.mamahealth.entity.Mother;
+import com.mamahealth.entity.RecoveryIndicator;
 import com.mamahealth.entity.RecoveryRecord;
 import com.mamahealth.entity.User;
 import com.mamahealth.exception.ResourceNotFoundException;
@@ -38,37 +39,40 @@ public class RecoveryService {
     /**
      * Create Recovery Record
      */
-    public RecoveryResponse createRecoveryRecord(
-            CreateRecoveryRequest request,
-            String email) {
+ public RecoveryResponse createRecoveryRecord(
+        CreateRecoveryRequest request,
+        String email) {
 
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException("User not found"));
+    User user = userRepository.findByEmail(email)
+            .orElseThrow(() ->
+                    new ResourceNotFoundException("User not found"));
 
-        Mother mother = motherRepository.findByUserAndActiveTrue(user)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException("Mother profile not found"));
+    Mother mother = motherRepository.findByUserAndActiveTrue(user)
+            .orElseThrow(() ->
+                    new ResourceNotFoundException("Mother profile not found"));
 
-        RecoveryRecord record = new RecoveryRecord();
+    RecoveryRecord record = new RecoveryRecord();
 
-        record.setMother(mother);
-        record.setRecordDate(request.getRecordDate());
-        record.setPainLevel(request.getPainLevel());
-        record.setBodyTemperature(request.getBodyTemperature());
-        record.setWoundCondition(request.getWoundCondition());
-        record.setBleedingLevel(request.getBleedingLevel());
-        record.setMobility(request.getMobility());
-        record.setMedicationTaken(request.getMedicationTaken());
-        record.setNotes(request.getNotes());
+    record.setMother(mother);
+    record.setRecordDate(request.getRecordDate());
+    record.setPainLevel(request.getPainLevel());
+    record.setBodyTemperature(request.getBodyTemperature());
+    record.setWoundCondition(request.getWoundCondition());
+    record.setBleedingLevel(request.getBleedingLevel());
+    record.setMobility(request.getMobility());
+    record.setMedicationTaken(request.getMedicationTaken());
+    record.setNotes(request.getNotes());
 
-        RecoveryRecord saved = recoveryRepository.save(record);
+    record.setRecoveryIndicator(
+            RecoveryIndicator.valueOf(
+                    calculateRecoveryIndicator(record)));
 
-        return recoveryMapper.toResponse(saved);
-    }
+    RecoveryRecord saved = recoveryRepository.save(record);
 
+    return buildRecoveryResponse(saved);
+}
     /**
-     * Get My Recovery History
+     * Mother Recovery History
      */
     public List<RecoveryResponse> getMyRecoveryHistory(String email) {
 
@@ -83,7 +87,7 @@ public class RecoveryService {
         return recoveryRepository
                 .findByMotherAndActiveTrueOrderByRecordDateDesc(mother)
                 .stream()
-                .map(recoveryMapper::toResponse)
+                .map(this::buildRecoveryResponse)
                 .toList();
     }
 
@@ -91,42 +95,47 @@ public class RecoveryService {
      * Update Recovery Record
      */
     public RecoveryResponse updateRecoveryRecord(
-            Long id,
-            CreateRecoveryRequest request,
-            String email) {
+        Long id,
+        CreateRecoveryRequest request,
+        String email) {
 
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException("User not found"));
+    User user = userRepository.findByEmail(email)
+            .orElseThrow(() ->
+                    new ResourceNotFoundException("User not found"));
 
-        Mother mother = motherRepository.findByUserAndActiveTrue(user)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException("Mother profile not found"));
+    Mother mother = motherRepository.findByUserAndActiveTrue(user)
+            .orElseThrow(() ->
+                    new ResourceNotFoundException("Mother profile not found"));
 
-        RecoveryRecord record = recoveryRepository.findByIdAndActiveTrue(id)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException("Recovery record not found"));
+    RecoveryRecord record = recoveryRepository.findByIdAndActiveTrue(id)
+            .orElseThrow(() ->
+                    new ResourceNotFoundException("Recovery record not found"));
 
-        if (!record.getMother().getId().equals(mother.getId())) {
-            throw new ResourceNotFoundException("You cannot update this recovery record");
-        }
-
-        record.setRecordDate(request.getRecordDate());
-        record.setPainLevel(request.getPainLevel());
-        record.setBodyTemperature(request.getBodyTemperature());
-        record.setWoundCondition(request.getWoundCondition());
-        record.setBleedingLevel(request.getBleedingLevel());
-        record.setMobility(request.getMobility());
-        record.setMedicationTaken(request.getMedicationTaken());
-        record.setNotes(request.getNotes());
-
-        RecoveryRecord updated = recoveryRepository.save(record);
-
-        return recoveryMapper.toResponse(updated);
+    if (!record.getMother().getId().equals(mother.getId())) {
+        throw new ResourceNotFoundException(
+                "You cannot update this recovery record");
     }
 
+    record.setRecordDate(request.getRecordDate());
+    record.setPainLevel(request.getPainLevel());
+    record.setBodyTemperature(request.getBodyTemperature());
+    record.setWoundCondition(request.getWoundCondition());
+    record.setBleedingLevel(request.getBleedingLevel());
+    record.setMobility(request.getMobility());
+    record.setMedicationTaken(request.getMedicationTaken());
+    record.setNotes(request.getNotes());
+
+    record.setRecoveryIndicator(
+            RecoveryIndicator.valueOf(
+                    calculateRecoveryIndicator(record)));
+
+    RecoveryRecord updated = recoveryRepository.save(record);
+
+    return buildRecoveryResponse(updated);
+}
+
     /**
-     * Soft Delete Recovery Record
+     * Delete Recovery Record
      */
     public void deleteRecoveryRecord(Long id, String email) {
 
@@ -150,4 +159,72 @@ public class RecoveryService {
 
         recoveryRepository.save(record);
     }
+
+    /**
+     * Doctor views a mother's recovery history
+     */
+    public List<RecoveryResponse> getMotherRecoveryHistory(Long motherId) {
+
+        Mother mother = motherRepository.findById(motherId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Mother not found"));
+
+        return recoveryRepository
+                .findByMotherAndActiveTrueOrderByRecordDateDesc(mother)
+                .stream()
+                .map(this::buildRecoveryResponse)
+                .toList();
+    }
+
+    /**
+     * Build Recovery Response
+     */
+    private RecoveryResponse buildRecoveryResponse(RecoveryRecord record) {
+
+        RecoveryResponse response =
+                recoveryMapper.toResponse(record);
+
+        response.setRecoveryIndicator(
+                calculateRecoveryIndicator(record));
+
+        return response;
+    }
+
+    /**
+     * Calculate Recovery Indicator
+     */
+    private String calculateRecoveryIndicator(RecoveryRecord record) {
+
+        // Needs Attention
+        if (record.getPainLevel() >= 7
+                || record.getBodyTemperature() >= 38.0
+                || record.getWoundCondition().name().equals("INFECTED")
+                || record.getBleedingLevel().name().equals("HEAVY")) {
+
+            return "NEEDS_ATTENTION";
+        }
+
+        // Monitor
+        if ((record.getPainLevel() >= 4 && record.getPainLevel() <= 6)
+                || (record.getBodyTemperature() >= 37.5
+                        && record.getBodyTemperature() < 38.0)
+                || record.getWoundCondition().name().equals("REDNESS")
+                || record.getBleedingLevel().name().equals("LIGHT")
+                || record.getMobility().name().equals("ASSISTED")) {
+
+            return "MONITOR";
+        }
+
+        // Improving
+        return "IMPROVING";
+    }
+
+  public List<RecoveryResponse> getRecentRecoveries() {
+
+    return recoveryRepository
+            .findTop5ByActiveTrueOrderByCreatedAtDesc()
+            .stream()
+            .map(this::buildRecoveryResponse)
+            .toList();
+}
 }

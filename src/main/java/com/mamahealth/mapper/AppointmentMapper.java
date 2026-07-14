@@ -15,19 +15,45 @@ public class AppointmentMapper {
         response.setId(appointment.getId());
 
         if (appointment.getMother() != null) {
-            response.setMotherId(appointment.getMother().getId());
+
+            response.setMotherId(
+                    appointment.getMother().getId());
+
+            response.setMotherName(
+                    appointment.getMother().getFullName());
+
         }
 
         if (appointment.getDoctor() != null) {
-            response.setDoctorId(appointment.getDoctor().getId());
+
+            response.setDoctorId(
+                    appointment.getDoctor().getId());
+
+            response.setDoctorName(
+                    appointment.getDoctor().getFullName());
+
+            response.setHospitalName(
+                    appointment.getDoctor().getHospitalName());
+
         }
 
-        response.setAppointmentDate(appointment.getAppointmentDate());
-        response.setAppointmentTime(appointment.getAppointmentTime());
-        response.setPurpose(appointment.getPurpose());
-        response.setNotes(appointment.getNotes());
-        response.setStatus(appointment.getStatus());
-        response.setCreatedAt(appointment.getCreatedAt());
+        response.setAppointmentDate(
+                appointment.getAppointmentDate());
+
+        response.setAppointmentTime(
+                appointment.getAppointmentTime());
+
+        response.setPurpose(
+                appointment.getPurpose());
+
+        response.setNotes(
+                appointment.getNotes());
+
+        response.setStatus(
+                appointment.getStatus());
+
+        response.setCreatedAt(
+                appointment.getCreatedAt());
 
         return response;
     }

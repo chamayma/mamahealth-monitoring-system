@@ -13,6 +13,12 @@ public class RecoveryMapper {
         RecoveryResponse response = new RecoveryResponse();
 
         response.setId(record.getId());
+
+        if (record.getMother() != null) {
+            response.setMotherName(
+                    record.getMother().getFullName());
+        }
+
         response.setRecordDate(record.getRecordDate());
         response.setPainLevel(record.getPainLevel());
         response.setBodyTemperature(record.getBodyTemperature());

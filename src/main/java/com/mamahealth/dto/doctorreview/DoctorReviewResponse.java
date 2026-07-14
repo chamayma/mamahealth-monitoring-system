@@ -4,6 +4,9 @@ import java.time.LocalDateTime;
 
 import com.mamahealth.entity.RiskLevel;
 
+import lombok.Data;
+
+@Data
 public class DoctorReviewResponse {
 
     private Long id;
@@ -14,62 +17,4 @@ public class DoctorReviewResponse {
     private RiskLevel riskLevel;
     private LocalDateTime reviewedAt;
 
-    public DoctorReviewResponse() {
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public Long getRecoveryRecordId() {
-        return recoveryRecordId;
-    }
-
-    public void setRecoveryRecordId(Long recoveryRecordId) {
-        this.recoveryRecordId = recoveryRecordId;
-    }
-
-    public Long getDoctorId() {
-        return doctorId;
-    }
-
-    public void setDoctorId(Long doctorId) {
-        this.doctorId = doctorId;
-    }
-
-    public String getAssessment() {
-        return assessment;
-    }
-
-    public void setAssessment(String assessment) {
-        this.assessment = assessment;
-    }
-
-    public String getRecommendation() {
-        return recommendation;
-    }
-
-    public void setRecommendation(String recommendation) {
-        this.recommendation = recommendation;
-    }
-
-    public RiskLevel getRiskLevel() {
-        return riskLevel;
-    }
-
-    public void setRiskLevel(RiskLevel riskLevel) {
-        this.riskLevel = riskLevel;
-    }
-
-    public LocalDateTime getReviewedAt() {
-        return reviewedAt;
-    }
-
-    public void setReviewedAt(LocalDateTime reviewedAt) {
-        this.reviewedAt = reviewedAt;
-    }
 }

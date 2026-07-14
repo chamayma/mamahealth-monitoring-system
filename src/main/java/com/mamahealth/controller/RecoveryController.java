@@ -15,21 +15,11 @@ import com.mamahealth.dto.recovery.RecoveryResponse;
 import com.mamahealth.security.CustomUserDetails;
 import com.mamahealth.service.RecoveryService;
 
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
-import io.swagger.v3.oas.annotations.tags.Tag;
-
 import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/v1/recovery")
 @Validated
-@PreAuthorize("hasRole('MOTHER')")
-@Tag(
-        name = "Recovery Management",
-        description = "APIs for managing recovery records")
-@SecurityRequirement(name = "Bearer Authentication")
 public class RecoveryController {
 
     private final RecoveryService recoveryService;
@@ -41,15 +31,9 @@ public class RecoveryController {
     /**
      * Create Recovery Record
      */
-    @Operation(
-            summary = "Create Recovery Record",
-            description = "Creates a recovery record for the authenticated mother.")
-    @ApiResponses({
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "Recovery record created successfully"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Validation failed"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized")
-    })
     @PostMapping
+    @PreAuthorize("hasRole('MOTHER')")
+
     public ResponseEntity<ApiResponse<RecoveryResponse>> createRecoveryRecord(
             @Valid @RequestBody CreateRecoveryRequest request,
             Authentication authentication) {
@@ -71,14 +55,9 @@ public class RecoveryController {
     /**
      * Get Recovery History
      */
-    @Operation(
-            summary = "Get Recovery History",
-            description = "Returns all recovery records for the authenticated mother.")
-    @ApiResponses({
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Recovery history retrieved successfully"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized")
-    })
     @GetMapping("/me/history")
+    @PreAuthorize("hasRole('MOTHER')")
+
     public ResponseEntity<ApiResponse<List<RecoveryResponse>>> getMyRecoveryHistory(
             Authentication authentication) {
 
@@ -98,15 +77,9 @@ public class RecoveryController {
     /**
      * Update Recovery Record
      */
-    @Operation(
-            summary = "Update Recovery Record",
-            description = "Updates an existing recovery record.")
-    @ApiResponses({
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Recovery record updated successfully"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Validation failed"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Recovery record not found")
-    })
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('MOTHER')")
+
     public ResponseEntity<ApiResponse<RecoveryResponse>> updateRecoveryRecord(
             @PathVariable Long id,
             @Valid @RequestBody CreateRecoveryRequest request,
@@ -130,14 +103,9 @@ public class RecoveryController {
     /**
      * Delete Recovery Record
      */
-    @Operation(
-            summary = "Delete Recovery Record",
-            description = "Soft deletes a recovery record.")
-    @ApiResponses({
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Recovery record deleted successfully"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Recovery record not found")
-    })
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('MOTHER')")
+
     public ResponseEntity<ApiResponse<Void>> deleteRecoveryRecord(
             @PathVariable Long id,
             Authentication authentication) {
@@ -154,4 +122,36 @@ public class RecoveryController {
                         "Recovery record deleted successfully.",
                         null));
     }
+
+    @GetMapping("/mother/{motherId}")
+@PreAuthorize("hasRole('DOCTOR')")
+public ResponseEntity<ApiResponse<List<RecoveryResponse>>> getMotherRecoveryHistory(
+        @PathVariable Long motherId) {
+
+    List<RecoveryResponse> response =
+            recoveryService.getMotherRecoveryHistory(motherId);
+
+    return ResponseEntity.ok(
+
+            ApiResponse.success(
+
+                    "Recovery history retrieved successfully.",
+
+                    response
+
+            )
+
+    );
+
+}
+
+@GetMapping("/recent")
+@PreAuthorize("hasRole('DOCTOR')")
+public ResponseEntity<ApiResponse<List<RecoveryResponse>>> getRecentRecoveries() {
+
+    return ResponseEntity.ok(
+            ApiResponse.success(
+                    "Recent recoveries retrieved successfully.",
+                    recoveryService.getRecentRecoveries()));
+}
 }

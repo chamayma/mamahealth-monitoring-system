@@ -13,21 +13,12 @@ import com.mamahealth.dto.doctorreview.DoctorReviewResponse;
 import com.mamahealth.security.CustomUserDetails;
 import com.mamahealth.service.DoctorReviewService;
 
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
-import io.swagger.v3.oas.annotations.tags.Tag;
-
 import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/v1/doctor-reviews")
 @Validated
 @PreAuthorize("hasRole('DOCTOR')")
-@Tag(
-        name = "Doctor Review Management",
-        description = "APIs for managing clinical reviews")
-@SecurityRequirement(name = "Bearer Authentication")
 public class DoctorReviewController {
 
     private final DoctorReviewService doctorReviewService;
@@ -39,15 +30,6 @@ public class DoctorReviewController {
     /**
      * Create Doctor Review
      */
-    @Operation(
-            summary = "Create Doctor Review",
-            description = "Creates a clinical review for a recovery record.")
-    @ApiResponses({
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "Doctor review created successfully"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Validation failed"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Recovery record not found")
-    })
     @PostMapping("/{recoveryId}")
     public ResponseEntity<ApiResponse<DoctorReviewResponse>> createReview(
             @PathVariable Long recoveryId,
@@ -72,13 +54,6 @@ public class DoctorReviewController {
     /**
      * Get Doctor Review
      */
-    @Operation(
-            summary = "Get Doctor Review",
-            description = "Returns the clinical review for a recovery record.")
-    @ApiResponses({
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Doctor review retrieved successfully"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Doctor review not found")
-    })
     @GetMapping("/{recoveryId}")
     public ResponseEntity<ApiResponse<DoctorReviewResponse>> getReview(
             @PathVariable Long recoveryId) {
@@ -95,14 +70,6 @@ public class DoctorReviewController {
     /**
      * Update Doctor Review
      */
-    @Operation(
-            summary = "Update Doctor Review",
-            description = "Updates an existing clinical review.")
-    @ApiResponses({
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Doctor review updated successfully"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Validation failed"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Doctor review not found")
-    })
     @PutMapping("/review/{reviewId}")
     public ResponseEntity<ApiResponse<DoctorReviewResponse>> updateReview(
             @PathVariable Long reviewId,
@@ -127,13 +94,6 @@ public class DoctorReviewController {
     /**
      * Delete Doctor Review
      */
-    @Operation(
-            summary = "Delete Doctor Review",
-            description = "Soft deletes a clinical review.")
-    @ApiResponses({
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Doctor review deleted successfully"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Doctor review not found")
-    })
     @DeleteMapping("/review/{reviewId}")
     public ResponseEntity<ApiResponse<Void>> deleteReview(
             @PathVariable Long reviewId,

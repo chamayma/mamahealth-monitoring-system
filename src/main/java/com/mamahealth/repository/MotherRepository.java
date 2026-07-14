@@ -1,5 +1,6 @@
 package com.mamahealth.repository;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -11,4 +12,10 @@ public interface MotherRepository extends JpaRepository<Mother, Long> {
 
     Optional<Mother> findByUser(User user);
     Optional<Mother> findByUserAndActiveTrue(User user);
+    long countByActiveTrue();
+    List<Mother> findByActiveTrueOrderByFullNameAsc();
+    List<Mother> findTop5ByActiveTrueOrderByIdDesc();
+    List<Mother> findByActiveTrueOrderByIdDesc();
+
+    Optional<Mother> findByIdAndActiveTrue(Long id);
 }

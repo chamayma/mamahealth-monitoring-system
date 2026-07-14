@@ -15,14 +15,32 @@ public class NotificationMapper {
         response.setId(notification.getId());
 
         if (notification.getMother() != null) {
-            response.setMotherId(notification.getMother().getId());
+
+    response.setMotherId(
+            notification.getMother().getId());
+
+    response.setMotherName(
+            notification.getMother().getFullName());
+
+}
+
+        if (notification.getDoctor() != null) {
+
+             response.setDoctorId(
+            notification.getDoctor().getId());
+
+    response.setDoctorName(
+            notification.getDoctor().getFullName());
+
+
         }
 
         response.setTitle(notification.getTitle());
         response.setMessage(notification.getMessage());
         response.setType(notification.getType());
-        response.setIsRead(notification.getIsRead());
         response.setCreatedAt(notification.getCreatedAt());
+        response.setStatus(notification.getStatus());
+        response.setReadAt(notification.getReadAt());
 
         return response;
     }

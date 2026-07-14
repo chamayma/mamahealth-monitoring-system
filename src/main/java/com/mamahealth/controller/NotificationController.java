@@ -15,20 +15,11 @@ import com.mamahealth.dto.notification.NotificationResponse;
 import com.mamahealth.security.CustomUserDetails;
 import com.mamahealth.service.NotificationService;
 
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
-import io.swagger.v3.oas.annotations.tags.Tag;
-
 import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/v1/notifications")
 @Validated
-@Tag(
-        name = "Notification Management",
-        description = "APIs for managing notifications")
-@SecurityRequirement(name = "Bearer Authentication")
 public class NotificationController {
 
     private final NotificationService notificationService;
@@ -38,24 +29,21 @@ public class NotificationController {
     }
 
     /**
-     * Create Notification
+     * Doctor creates notification
      */
-    @Operation(
-            summary = "Create Notification",
-            description = "Allows an Admin or Doctor to create a notification for a mother.")
-    @ApiResponses({
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "Notification created successfully"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Validation failed"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Mother not found")
-    })
     @PostMapping
-    @PreAuthorize("hasAnyRole('ADMIN','DOCTOR')")
+    @PreAuthorize("hasRole('DOCTOR')")
     public ResponseEntity<ApiResponse<NotificationResponse>> createNotification(
-            @Valid @RequestBody CreateNotificationRequest request) {
+            @Valid @RequestBody CreateNotificationRequest request,
+            Authentication authentication) {
+
+        CustomUserDetails userDetails =
+                (CustomUserDetails) authentication.getPrincipal();
 
         NotificationResponse response =
-                notificationService.createNotification(request);
+                notificationService.createNotification(
+                        request,
+                        userDetails.getUsername());
 
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.success(
@@ -64,15 +52,8 @@ public class NotificationController {
     }
 
     /**
-     * Get My Notifications
+     * Mother views all notifications
      */
-    @Operation(
-            summary = "Get My Notifications",
-            description = "Returns all notifications for the authenticated mother.")
-    @ApiResponses({
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Notifications retrieved successfully"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized")
-    })
     @GetMapping("/me")
     @PreAuthorize("hasRole('MOTHER')")
     public ResponseEntity<ApiResponse<List<NotificationResponse>>> getMyNotifications(
@@ -92,15 +73,8 @@ public class NotificationController {
     }
 
     /**
-     * Get Unread Notifications
+     * Mother views unread notifications
      */
-    @Operation(
-            summary = "Get Unread Notifications",
-            description = "Returns unread notifications for the authenticated mother.")
-    @ApiResponses({
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Unread notifications retrieved successfully"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized")
-    })
     @GetMapping("/me/unread")
     @PreAuthorize("hasRole('MOTHER')")
     public ResponseEntity<ApiResponse<List<NotificationResponse>>> getUnreadNotifications(
@@ -120,15 +94,8 @@ public class NotificationController {
     }
 
     /**
-     * Mark Notification as Read
+     * Mother marks notification as read
      */
-    @Operation(
-            summary = "Mark Notification as Read",
-            description = "Marks a notification as read.")
-    @ApiResponses({
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Notification marked as read"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Notification not found")
-    })
     @PatchMapping("/{id}/read")
     @PreAuthorize("hasRole('MOTHER')")
     public ResponseEntity<ApiResponse<NotificationResponse>> markAsRead(
@@ -149,32 +116,74 @@ public class NotificationController {
                         response));
     }
 
+ /**
+ * Doctor deletes a notification
+ */
+@DeleteMapping("/{id}")
+@PreAuthorize("hasRole('DOCTOR')")
+public ResponseEntity<ApiResponse<Void>> deleteNotification(
+        @PathVariable Long id,
+        Authentication authentication) {
+
+    CustomUserDetails userDetails =
+            (CustomUserDetails) authentication.getPrincipal();
+
+    notificationService.deleteNotification(
+            id,
+            userDetails.getUsername());
+
+    return ResponseEntity.ok(
+            ApiResponse.success(
+                    "Notification deleted successfully.",
+                    null));
+}
+
     /**
-     * Delete Notification
+     * Doctor dashboard recent notifications
      */
-    @Operation(
-            summary = "Delete Notification",
-            description = "Soft deletes a notification.")
-    @ApiResponses({
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Notification deleted successfully"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Notification not found")
-    })
-    @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('MOTHER')")
-    public ResponseEntity<ApiResponse<Void>> deleteNotification(
-            @PathVariable Long id,
-            Authentication authentication) {
-
-        CustomUserDetails userDetails =
-                (CustomUserDetails) authentication.getPrincipal();
-
-        notificationService.deleteNotification(
-                id,
-                userDetails.getUsername());
+    @GetMapping("/recent")
+    @PreAuthorize("hasRole('DOCTOR')")
+    public ResponseEntity<ApiResponse<List<NotificationResponse>>> getRecentNotifications() {
 
         return ResponseEntity.ok(
                 ApiResponse.success(
-                        "Notification deleted successfully.",
-                        null));
+                        "Recent notifications retrieved successfully.",
+                        notificationService.getRecentNotifications()));
     }
+
+    /**
+     * Doctor views notifications of one mother
+     */
+    @GetMapping("/mother/{motherId}")
+    @PreAuthorize("hasRole('DOCTOR')")
+    public ResponseEntity<ApiResponse<List<NotificationResponse>>> getMotherNotifications(
+            @PathVariable Long motherId) {
+
+        return ResponseEntity.ok(
+                ApiResponse.success(
+                        "Mother notifications retrieved successfully.",
+                        notificationService.getMotherNotifications(motherId)));
+    }
+
+    /**
+ * Doctor views all notifications they have sent
+ */
+@GetMapping("/doctor/me")
+@PreAuthorize("hasRole('DOCTOR')")
+public ResponseEntity<ApiResponse<List<NotificationResponse>>> getDoctorNotifications(
+        Authentication authentication) {
+
+    CustomUserDetails userDetails =
+            (CustomUserDetails) authentication.getPrincipal();
+
+    List<NotificationResponse> response =
+            notificationService.getDoctorNotifications(
+                    userDetails.getUsername());
+
+    return ResponseEntity.ok(
+            ApiResponse.success(
+                    "Doctor notifications retrieved successfully.",
+                    response));
+
+}
 }

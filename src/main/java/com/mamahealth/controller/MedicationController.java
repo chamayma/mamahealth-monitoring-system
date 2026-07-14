@@ -15,20 +15,11 @@ import com.mamahealth.dto.medication.MedicationResponse;
 import com.mamahealth.security.CustomUserDetails;
 import com.mamahealth.service.MedicationService;
 
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
-import io.swagger.v3.oas.annotations.tags.Tag;
-
 import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/v1/medications")
 @Validated
-@Tag(
-        name = "Medication Management",
-        description = "APIs for prescribing and managing medications")
-@SecurityRequirement(name = "Bearer Authentication")
 public class MedicationController {
 
     private final MedicationService medicationService;
@@ -40,15 +31,6 @@ public class MedicationController {
     /**
      * Doctor prescribes medication
      */
-    @Operation(
-            summary = "Prescribe Medication",
-            description = "Allows a doctor to prescribe medication to a mother.")
-    @ApiResponses({
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "Medication prescribed successfully"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Validation failed"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Mother or Doctor not found")
-    })
     @PostMapping
     @PreAuthorize("hasRole('DOCTOR')")
     public ResponseEntity<ApiResponse<MedicationResponse>> prescribeMedication(
@@ -72,13 +54,6 @@ public class MedicationController {
     /**
      * Mother views medications
      */
-    @Operation(
-            summary = "Get My Medications",
-            description = "Returns all medications for the authenticated mother.")
-    @ApiResponses({
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Medications retrieved successfully"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized")
-    })
     @GetMapping("/me")
     @PreAuthorize("hasRole('MOTHER')")
     public ResponseEntity<ApiResponse<List<MedicationResponse>>> getMyMedications(
@@ -97,41 +72,10 @@ public class MedicationController {
                         response));
     }
 
-    /**
-     * Doctor updates medication
-     */
-    @Operation(
-            summary = "Update Medication",
-            description = "Updates an existing medication.")
-    @ApiResponses({
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Medication updated successfully"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Medication not found")
-    })
-    @PutMapping("/{id}")
-    @PreAuthorize("hasRole('DOCTOR')")
-    public ResponseEntity<ApiResponse<MedicationResponse>> updateMedication(
-            @PathVariable Long id,
-            @Valid @RequestBody CreateMedicationRequest request) {
-
-        MedicationResponse response =
-                medicationService.updateMedication(id, request);
-
-        return ResponseEntity.ok(
-                ApiResponse.success(
-                        "Medication updated successfully.",
-                        response));
-    }
 
     /**
      * Mother marks medication completed
      */
-    @Operation(
-            summary = "Complete Medication",
-            description = "Marks a medication as completed.")
-    @ApiResponses({
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Medication marked as completed"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Medication not found")
-    })
     @PatchMapping("/{id}/complete")
     @PreAuthorize("hasRole('MOTHER')")
     public ResponseEntity<ApiResponse<MedicationResponse>> markCompleted(
@@ -155,13 +99,6 @@ public class MedicationController {
     /**
      * Doctor deletes medication
      */
-    @Operation(
-            summary = "Delete Medication",
-            description = "Soft deletes a medication.")
-    @ApiResponses({
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Medication deleted successfully"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Medication not found")
-    })
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('DOCTOR')")
     public ResponseEntity<ApiResponse<Void>> deleteMedication(
@@ -174,4 +111,116 @@ public class MedicationController {
                         "Medication deleted successfully.",
                         null));
     }
+
+    @GetMapping("/recent-completed")
+@PreAuthorize("hasRole('DOCTOR')")
+public ResponseEntity<ApiResponse<List<MedicationResponse>>> getRecentMedications() {
+
+    return ResponseEntity.ok(
+
+            ApiResponse.success(
+
+                    "Recent completed medications retrieved successfully.",
+
+                    medicationService.getRecentMedications()
+
+            )
+
+    );
+
+}
+
+/**
+ * Doctor views medications of one mother
+ */
+@GetMapping("/mother/{motherId}")
+@PreAuthorize("hasRole('DOCTOR')")
+public ResponseEntity<ApiResponse<List<MedicationResponse>>> getMotherMedications(
+        @PathVariable Long motherId) {
+
+    return ResponseEntity.ok(
+
+            ApiResponse.success(
+
+                    "Mother medications retrieved successfully.",
+
+                    medicationService.getMotherMedications(motherId)
+
+            )
+
+    );
+
+}
+
+/**
+ * Get one medication
+ */
+@GetMapping("/{id}")
+@PreAuthorize("hasRole('DOCTOR')")
+public ResponseEntity<ApiResponse<MedicationResponse>> getMedication(
+        @PathVariable Long id,
+        Authentication authentication) {
+
+    CustomUserDetails userDetails =
+            (CustomUserDetails) authentication.getPrincipal();
+
+    MedicationResponse response =
+            medicationService.getMedication(
+                    id,
+                    userDetails.getUsername());
+
+    return ResponseEntity.ok(
+            ApiResponse.success(
+                    "Medication retrieved successfully.",
+                    response));
+
+}
+
+/**
+ * Update medication
+ */
+@PutMapping("/{id}")
+@PreAuthorize("hasRole('DOCTOR')")
+public ResponseEntity<ApiResponse<MedicationResponse>> updateMedication(
+        @PathVariable Long id,
+        @Valid @RequestBody CreateMedicationRequest request,
+        Authentication authentication) {
+
+    CustomUserDetails userDetails =
+            (CustomUserDetails) authentication.getPrincipal();
+
+    MedicationResponse response =
+            medicationService.updateMedication(
+                    id,
+                    request,
+                    userDetails.getUsername());
+
+    return ResponseEntity.ok(
+            ApiResponse.success(
+                    "Medication updated successfully.",
+                    response));
+
+}
+
+/**
+ * Doctor views all medications they prescribed
+ */
+@GetMapping("/doctor/me")
+@PreAuthorize("hasRole('DOCTOR')")
+public ResponseEntity<ApiResponse<List<MedicationResponse>>> getDoctorMedications(
+        Authentication authentication) {
+
+    CustomUserDetails userDetails =
+            (CustomUserDetails) authentication.getPrincipal();
+
+    List<MedicationResponse> response =
+            medicationService.getDoctorMedications(
+                    userDetails.getUsername());
+
+    return ResponseEntity.ok(
+            ApiResponse.success(
+                    "Doctor medications retrieved successfully.",
+                    response));
+}
+
 }

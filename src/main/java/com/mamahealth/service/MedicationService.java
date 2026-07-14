@@ -110,33 +110,33 @@ public class MedicationService {
     /**
      * Doctor updates prescription
      */
-    public MedicationResponse updateMedication(
-            Long medicationId,
-            CreateMedicationRequest request) {
+//     public MedicationResponse updateMedication(
+//             Long medicationId,
+//             CreateMedicationRequest request) {
 
-        Medication medication = medicationRepository
-                .findByIdAndActiveTrue(medicationId)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException("Medication not found"));
+//         Medication medication = medicationRepository
+//                 .findByIdAndActiveTrue(medicationId)
+//                 .orElseThrow(() ->
+//                         new ResourceNotFoundException("Medication not found"));
 
-        Mother mother = motherRepository.findById(request.getMotherId())
-                .orElseThrow(() ->
-                        new ResourceNotFoundException("Mother not found"));
+//         Mother mother = motherRepository.findById(request.getMotherId())
+//                 .orElseThrow(() ->
+//                         new ResourceNotFoundException("Mother not found"));
 
-        medication.setMother(mother);
-        medication.setMedicationName(request.getMedicationName());
-        medication.setDosage(request.getDosage());
-        medication.setFrequency(request.getFrequency());
-        medication.setStartDate(request.getStartDate());
-        medication.setEndDate(request.getEndDate());
-        medication.setInstructions(request.getInstructions());
+//         medication.setMother(mother);
+//         medication.setMedicationName(request.getMedicationName());
+//         medication.setDosage(request.getDosage());
+//         medication.setFrequency(request.getFrequency());
+//         medication.setStartDate(request.getStartDate());
+//         medication.setEndDate(request.getEndDate());
+//         medication.setInstructions(request.getInstructions());
 
-        Medication updated = medicationRepository.save(medication);
+//         Medication updated = medicationRepository.save(medication);
 
-        logger.info("Medication {} updated", medicationId);
+//         logger.info("Medication {} updated", medicationId);
 
-        return medicationMapper.toResponse(updated);
-    }
+//         return medicationMapper.toResponse(updated);
+//     }
 
     /**
  * Mother marks medication as completed
@@ -163,13 +163,23 @@ public MedicationResponse markCompleted(
                 "You cannot update another mother's medication.");
     }
 
+    // Prevent completing the same medication twice
+    if (medication.getStatus() == MedicationStatus.COMPLETED) {
+        throw new IllegalStateException(
+                "Medication has already been completed.");
+    }
+
     medication.setStatus(MedicationStatus.COMPLETED);
+
+    medication.setCompletedAt(java.time.LocalDateTime.now());
 
     Medication updated = medicationRepository.save(medication);
 
-    logger.info("Mother {} completed medication {}",
+    logger.info(
+            "Mother {} completed medication {} at {}",
             mother.getId(),
-            medicationId);
+            medicationId,
+            updated.getCompletedAt());
 
     return medicationMapper.toResponse(updated);
 }
@@ -190,4 +200,134 @@ public MedicationResponse markCompleted(
 
         logger.info("Medication {} deleted", medicationId);
     }
+
+    public List<MedicationResponse> getRecentMedications() {
+
+    return medicationRepository
+            .findTop5ByStatusAndActiveTrueOrderByCompletedAtDesc(
+                    MedicationStatus.COMPLETED)
+            .stream()
+            .map(medicationMapper::toResponse)
+            .toList();
+
+}
+
+/**
+ * Doctor views medications of a specific mother
+ */
+public List<MedicationResponse> getMotherMedications(Long motherId) {
+
+    Mother mother = motherRepository.findById(motherId)
+            .orElseThrow(() ->
+                    new ResourceNotFoundException("Mother not found"));
+
+    return medicationRepository
+            .findByMotherAndActiveTrueOrderByCreatedAtDesc(mother)
+            .stream()
+            .map(medicationMapper::toResponse)
+            .toList();
+
+}
+
+/**
+ * Get one medication by ID
+ */
+public MedicationResponse getMedication(
+        Long medicationId,
+        String email) {
+
+    User user = userRepository.findByEmail(email)
+            .orElseThrow(() ->
+                    new ResourceNotFoundException("User not found"));
+
+    Doctor doctor = doctorRepository
+            .findByUserAndActiveTrue(user)
+            .orElseThrow(() ->
+                    new ResourceNotFoundException("Doctor profile not found"));
+
+    Medication medication = medicationRepository
+            .findByIdAndActiveTrue(medicationId)
+            .orElseThrow(() ->
+                    new ResourceNotFoundException("Medication not found"));
+
+    if (!medication.getDoctor().getId().equals(doctor.getId())) {
+
+        throw new ResourceNotFoundException(
+                "You cannot access another doctor's medication.");
+
+    }
+
+    return medicationMapper.toResponse(medication);
+
+}
+
+/**
+ * Update medication
+ */
+public MedicationResponse updateMedication(
+        Long medicationId,
+        CreateMedicationRequest request,
+        String email) {
+
+    User user = userRepository.findByEmail(email)
+            .orElseThrow(() ->
+                    new ResourceNotFoundException("User not found"));
+
+    Doctor doctor = doctorRepository
+            .findByUserAndActiveTrue(user)
+            .orElseThrow(() ->
+                    new ResourceNotFoundException("Doctor profile not found"));
+
+    Medication medication = medicationRepository
+            .findByIdAndActiveTrue(medicationId)
+            .orElseThrow(() ->
+                    new ResourceNotFoundException("Medication not found"));
+
+    if (!medication.getDoctor().getId().equals(doctor.getId())) {
+
+        throw new ResourceNotFoundException(
+                "You cannot edit another doctor's medication.");
+
+    }
+
+    medication.setMedicationName(request.getMedicationName());
+    medication.setDosage(request.getDosage());
+    medication.setFrequency(request.getFrequency());
+    medication.setStartDate(request.getStartDate());
+    medication.setEndDate(request.getEndDate());
+    medication.setInstructions(request.getInstructions());
+
+    Medication updated =
+            medicationRepository.save(medication);
+
+    logger.info(
+            "Doctor {} updated medication {}",
+            doctor.getId(),
+            updated.getId());
+
+    return medicationMapper.toResponse(updated);
+
+}
+
+/**
+ * Doctor views all medications they prescribed
+ */
+public List<MedicationResponse> getDoctorMedications(String email) {
+
+    User user = userRepository.findByEmail(email)
+            .orElseThrow(() ->
+                    new ResourceNotFoundException("User not found"));
+
+    Doctor doctor = doctorRepository
+            .findByUserAndActiveTrue(user)
+            .orElseThrow(() ->
+                    new ResourceNotFoundException("Doctor profile not found"));
+
+    return medicationRepository
+            .findByDoctorAndActiveTrueOrderByCreatedAtDesc(doctor)
+            .stream()
+            .map(medicationMapper::toResponse)
+            .toList();
+}
+
 }

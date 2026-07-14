@@ -21,19 +21,24 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+import org.springframework.web.cors.CorsConfigurationSource;
+
 @EnableMethodSecurity
 @Configuration
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final CustomUserDetailsService customUserDetailsService;
+    private final CorsConfigurationSource corsConfigurationSource;
 
     public SecurityConfig(
             JwtAuthenticationFilter jwtAuthenticationFilter,
-            CustomUserDetailsService customUserDetailsService) {
+            CustomUserDetailsService customUserDetailsService,
+            CorsConfigurationSource corsConfigurationSource) {
 
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
         this.customUserDetailsService = customUserDetailsService;
+        this.corsConfigurationSource = corsConfigurationSource;
     }
 
     @Bean
@@ -66,6 +71,8 @@ public class SecurityConfig {
 
         http
 
+            .cors(cors -> cors.configurationSource(corsConfigurationSource))
+
             .csrf(csrf -> csrf.disable())
 
             .sessionManagement(session ->
@@ -73,7 +80,6 @@ public class SecurityConfig {
 
             .authorizeHttpRequests(auth -> auth
 
-                    // Public APIs
                     .requestMatchers(
                             "/api/v1/auth/**",
                             "/swagger-ui/**",
@@ -81,7 +87,6 @@ public class SecurityConfig {
                             "/v3/api-docs/**")
                     .permitAll()
 
-                    // Every other endpoint requires authentication
                     .anyRequest()
                     .authenticated())
 

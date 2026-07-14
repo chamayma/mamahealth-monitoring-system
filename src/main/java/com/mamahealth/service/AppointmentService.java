@@ -1,5 +1,6 @@
 package com.mamahealth.service;
 
+import java.time.LocalDate;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -105,6 +106,26 @@ public class AppointmentService {
     }
 
     /**
+     * Doctor views appointments
+     */
+    public List<AppointmentResponse> getDoctorAppointments(String email) {
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("User not found"));
+
+        Doctor doctor = doctorRepository.findByUserAndActiveTrue(user)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Doctor profile not found"));
+
+        return appointmentRepository
+                .findByDoctorAndActiveTrueOrderByAppointmentDateAscAppointmentTimeAsc(doctor)
+                .stream()
+                .map(appointmentMapper::toResponse)
+                .toList();
+    }
+
+    /**
      * Doctor updates appointment
      */
     public AppointmentResponse updateAppointment(
@@ -116,11 +137,11 @@ public class AppointmentService {
                 .orElseThrow(() ->
                         new ResourceNotFoundException("Appointment not found"));
 
-        Mother mother = motherRepository.findById(request.getMotherId())
-                .orElseThrow(() ->
-                        new ResourceNotFoundException("Mother not found"));
+        // Mother mother = motherRepository.findById(request.getMotherId())
+        //         .orElseThrow(() ->
+        //                 new ResourceNotFoundException("Mother not found"));
 
-        appointment.setMother(mother);
+        // appointment.setMother(mother);
         appointment.setAppointmentDate(request.getAppointmentDate());
         appointment.setAppointmentTime(request.getAppointmentTime());
         appointment.setPurpose(request.getPurpose());
@@ -153,6 +174,53 @@ public class AppointmentService {
     }
 
     /**
+ * Mother confirms attendance
+ */
+public AppointmentResponse confirmAppointment(
+        Long appointmentId,
+        String email) {
+
+    User user = userRepository.findByEmail(email)
+            .orElseThrow(() ->
+                    new ResourceNotFoundException("User not found"));
+
+    Mother mother = motherRepository.findByUserAndActiveTrue(user)
+            .orElseThrow(() ->
+                    new ResourceNotFoundException("Mother profile not found"));
+
+    Appointment appointment = appointmentRepository
+            .findByIdAndActiveTrue(appointmentId)
+            .orElseThrow(() ->
+                    new ResourceNotFoundException("Appointment not found"));
+
+    if (!appointment.getMother().getId().equals(mother.getId())) {
+
+        throw new ResourceNotFoundException(
+                "You cannot confirm another mother's appointment.");
+
+    }
+
+    if (appointment.getStatus() != AppointmentStatus.SCHEDULED) {
+
+        throw new IllegalStateException(
+                "Only scheduled appointments can be confirmed.");
+
+    }
+
+    appointment.setStatus(AppointmentStatus.CONFIRMED);
+
+    Appointment updated = appointmentRepository.save(appointment);
+
+    logger.info(
+            "Mother {} confirmed appointment {}",
+            mother.getId(),
+            appointmentId);
+
+    return appointmentMapper.toResponse(updated);
+
+}
+
+    /**
      * Cancel appointment
      */
     public AppointmentResponse cancelAppointment(Long appointmentId) {
@@ -172,6 +240,51 @@ public class AppointmentService {
     }
 
     /**
+ * Doctor marks appointment as missed
+ */
+public AppointmentResponse markMissed(Long appointmentId) {
+
+    Appointment appointment = appointmentRepository
+            .findByIdAndActiveTrue(appointmentId)
+            .orElseThrow(() ->
+                    new ResourceNotFoundException("Appointment not found"));
+
+    appointment.setStatus(AppointmentStatus.MISSED);
+
+    Appointment updated = appointmentRepository.save(appointment);
+
+    logger.info(
+            "Appointment {} marked as missed",
+            appointmentId);
+
+    return appointmentMapper.toResponse(updated);
+
+}
+
+public AppointmentResponse getAppointment(Long id) {
+
+    Appointment appointment = appointmentRepository
+            .findByIdAndActiveTrue(id)
+            .orElseThrow(() ->
+                    new ResourceNotFoundException(
+                            "Appointment not found"));
+
+    return appointmentMapper.toResponse(appointment);
+
+}
+
+public List<AppointmentResponse> getTodayAppointments() {
+
+    return appointmentRepository
+            .findTop5ByAppointmentDateAndActiveTrueOrderByAppointmentTimeAsc(
+                    java.time.LocalDate.now())
+            .stream()
+            .map(appointmentMapper::toResponse)
+            .toList();
+
+}
+
+    /**
      * Soft delete appointment
      */
     public void deleteAppointment(Long appointmentId) {
@@ -187,4 +300,43 @@ public class AppointmentService {
 
         logger.info("Appointment {} deleted", appointmentId);
     }
+
+    public List<AppointmentResponse> getMotherAppointments(Long motherId) {
+
+    Mother mother = motherRepository.findById(motherId)
+            .orElseThrow(() ->
+                    new ResourceNotFoundException("Mother not found"));
+
+    return appointmentRepository
+            .findByMotherAndActiveTrueOrderByAppointmentDateDescAppointmentTimeDesc(mother)
+            .stream()
+            .map(appointmentMapper::toResponse)
+            .toList();
+
+}
+
+/**
+ * Get next upcoming appointment
+ */
+public AppointmentResponse getNextAppointment(String email) {
+
+    User user = userRepository.findByEmail(email)
+            .orElseThrow(() ->
+                    new ResourceNotFoundException("User not found"));
+
+    Mother mother = motherRepository.findByUserAndActiveTrue(user)
+            .orElseThrow(() ->
+                    new ResourceNotFoundException("Mother profile not found"));
+
+    Appointment appointment = appointmentRepository
+            .findFirstByMotherAndStatusAndAppointmentDateGreaterThanEqualOrderByAppointmentDateAscAppointmentTimeAsc(
+                    mother,
+                    AppointmentStatus.SCHEDULED,
+                    LocalDate.now())
+            .orElseThrow(() ->
+                    new ResourceNotFoundException("No upcoming appointment"));
+
+    return appointmentMapper.toResponse(appointment);
+}
+
 }

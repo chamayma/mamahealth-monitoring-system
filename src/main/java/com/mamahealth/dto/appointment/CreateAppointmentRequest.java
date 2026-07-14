@@ -6,8 +6,11 @@ import java.time.LocalTime;
 import jakarta.validation.constraints.FutureOrPresent;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
+import lombok.Data;
 
+@Data
 public class CreateAppointmentRequest {
 
     @NotNull(message = "Mother ID is required")
@@ -22,51 +25,12 @@ public class CreateAppointmentRequest {
 
     @NotBlank(message = "Purpose is required")
     @Size(max = 255)
+    @Pattern(regexp = "^[\\p{L}0-9 .,'()\\-]+$", message = "Purpose must be a valid text value")
     private String purpose;
 
     @Size(max = 1000)
+    @Pattern(regexp = "^[\\p{L}0-9 .,'()\\-]*$", message = "Notes must be valid text")
     private String notes;
 
-    public CreateAppointmentRequest() {
-    }
-
-    public Long getMotherId() {
-        return motherId;
-    }
-
-    public void setMotherId(Long motherId) {
-        this.motherId = motherId;
-    }
-
-    public LocalDate getAppointmentDate() {
-        return appointmentDate;
-    }
-
-    public void setAppointmentDate(LocalDate appointmentDate) {
-        this.appointmentDate = appointmentDate;
-    }
-
-    public LocalTime getAppointmentTime() {
-        return appointmentTime;
-    }
-
-    public void setAppointmentTime(LocalTime appointmentTime) {
-        this.appointmentTime = appointmentTime;
-    }
-
-    public String getPurpose() {
-        return purpose;
-    }
-
-    public void setPurpose(String purpose) {
-        this.purpose = purpose;
-    }
-
-    public String getNotes() {
-        return notes;
-    }
-
-    public void setNotes(String notes) {
-        this.notes = notes;
-    }
+    
 }

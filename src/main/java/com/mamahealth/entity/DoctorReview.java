@@ -3,7 +3,9 @@ package com.mamahealth.entity;
 import java.time.LocalDateTime;
 
 import jakarta.persistence.*;
+import lombok.Data;
 
+@Data
 @Entity
 @Table(name = "doctor_reviews")
 public class DoctorReview {
@@ -47,62 +49,4 @@ public class DoctorReview {
         reviewedAt = LocalDateTime.now();
     }
 
-    public DoctorReview() {
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public RecoveryRecord getRecoveryRecord() {
-        return recoveryRecord;
-    }
-
-    public void setRecoveryRecord(RecoveryRecord recoveryRecord) {
-        this.recoveryRecord = recoveryRecord;
-    }
-
-    public Doctor getDoctor() {
-        return doctor;
-    }
-
-    public void setDoctor(Doctor doctor) {
-        this.doctor = doctor;
-    }
-
-    public String getAssessment() {
-        return assessment;
-    }
-
-    public void setAssessment(String assessment) {
-        this.assessment = assessment;
-    }
-
-    public String getRecommendation() {
-        return recommendation;
-    }
-
-    public void setRecommendation(String recommendation) {
-        this.recommendation = recommendation;
-    }
-
-    public RiskLevel getRiskLevel() {
-        return riskLevel;
-    }
-
-    public void setRiskLevel(RiskLevel riskLevel) {
-        this.riskLevel = riskLevel;
-    }
-
-    public LocalDateTime getReviewedAt() {
-        return reviewedAt;
-    }
-
-    public Boolean getActive() {
-        return active;
-    }
-
-    public void setActive(Boolean active) {
-        this.active = active;
-    }
 }

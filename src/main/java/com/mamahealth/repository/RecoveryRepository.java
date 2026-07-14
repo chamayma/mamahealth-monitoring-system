@@ -15,4 +15,7 @@ public interface RecoveryRepository
             Mother mother);
 
     Optional<RecoveryRecord> findByIdAndActiveTrue(Long id);
+    long countByActiveTrue();
+
+    List<RecoveryRecord> findTop5ByActiveTrueOrderByCreatedAtDesc();
 }

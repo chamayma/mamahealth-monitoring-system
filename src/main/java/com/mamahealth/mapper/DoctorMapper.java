@@ -19,6 +19,7 @@ public class DoctorMapper {
         response.setLicenseNumber(doctor.getLicenseNumber());
         response.setHospitalName(doctor.getHospitalName());
         response.setYearsOfExperience(doctor.getYearsOfExperience());
+        response.setActive(doctor.getActive());
 
         if (doctor.getUser() != null) {
             response.setEmail(doctor.getUser().getEmail());

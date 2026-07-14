@@ -15,20 +15,11 @@ import com.mamahealth.dto.common.ApiResponse;
 import com.mamahealth.security.CustomUserDetails;
 import com.mamahealth.service.AppointmentService;
 
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
-import io.swagger.v3.oas.annotations.tags.Tag;
-
 import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/v1/appointments")
 @Validated
-@Tag(
-        name = "Appointment Management",
-        description = "APIs for managing appointments")
-@SecurityRequirement(name = "Bearer Authentication")
 public class AppointmentController {
 
     private final AppointmentService appointmentService;
@@ -40,15 +31,6 @@ public class AppointmentController {
     /**
      * Doctor schedules appointment
      */
-    @Operation(
-            summary = "Create Appointment",
-            description = "Allows a doctor to schedule an appointment for a mother.")
-    @ApiResponses({
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "Appointment created successfully"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Validation failed"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Mother or Doctor not found")
-    })
     @PostMapping
     @PreAuthorize("hasRole('DOCTOR')")
     public ResponseEntity<ApiResponse<AppointmentResponse>> createAppointment(
@@ -72,13 +54,6 @@ public class AppointmentController {
     /**
      * Mother views appointments
      */
-    @Operation(
-            summary = "Get My Appointments",
-            description = "Returns all appointments for the authenticated mother.")
-    @ApiResponses({
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Appointments retrieved successfully"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized")
-    })
     @GetMapping("/me")
     @PreAuthorize("hasRole('MOTHER')")
     public ResponseEntity<ApiResponse<List<AppointmentResponse>>> getMyAppointments(
@@ -98,15 +73,74 @@ public class AppointmentController {
     }
 
     /**
+ * Mother confirms appointment attendance
+ */
+@PatchMapping("/{id}/confirm")
+@PreAuthorize("hasRole('MOTHER')")
+public ResponseEntity<ApiResponse<AppointmentResponse>> confirmAppointment(
+        @PathVariable Long id,
+        Authentication authentication) {
+
+    CustomUserDetails userDetails =
+            (CustomUserDetails) authentication.getPrincipal();
+
+    AppointmentResponse response =
+            appointmentService.confirmAppointment(
+                    id,
+                    userDetails.getUsername());
+
+    return ResponseEntity.ok(
+            ApiResponse.success(
+                    "Appointment confirmed successfully.",
+                    response));
+
+}
+
+    /**
+     * Doctor views their appointments
+     */
+    @GetMapping("/doctor/me")
+    @PreAuthorize("hasRole('DOCTOR')")
+    public ResponseEntity<ApiResponse<List<AppointmentResponse>>> getDoctorAppointments(
+            Authentication authentication) {
+
+        CustomUserDetails userDetails =
+                (CustomUserDetails) authentication.getPrincipal();
+
+        List<AppointmentResponse> response =
+                appointmentService.getDoctorAppointments(
+                        userDetails.getUsername());
+
+        return ResponseEntity.ok(
+                ApiResponse.success(
+                        "Appointments retrieved successfully.",
+                        response));
+    }
+     
+    /**
+ * Doctor views today's appointments
+ */
+@GetMapping("/today")
+@PreAuthorize("hasRole('DOCTOR')")
+public ResponseEntity<ApiResponse<List<AppointmentResponse>>> getTodayAppointments() {
+
+    return ResponseEntity.ok(
+
+            ApiResponse.success(
+
+                    "Today's appointments retrieved successfully.",
+
+                    appointmentService.getTodayAppointments()
+
+            )
+
+    );
+
+}
+
+    /**
      * Doctor updates appointment
      */
-    @Operation(
-            summary = "Update Appointment",
-            description = "Updates an existing appointment.")
-    @ApiResponses({
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Appointment updated successfully"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Appointment not found")
-    })
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('DOCTOR')")
     public ResponseEntity<ApiResponse<AppointmentResponse>> updateAppointment(
@@ -125,13 +159,6 @@ public class AppointmentController {
     /**
      * Doctor marks appointment completed
      */
-    @Operation(
-            summary = "Complete Appointment",
-            description = "Marks an appointment as completed.")
-    @ApiResponses({
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Appointment completed successfully"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Appointment not found")
-    })
     @PatchMapping("/{id}/complete")
     @PreAuthorize("hasRole('DOCTOR')")
     public ResponseEntity<ApiResponse<AppointmentResponse>> markCompleted(
@@ -147,15 +174,45 @@ public class AppointmentController {
     }
 
     /**
+ * Doctor marks appointment as missed
+ */
+@PatchMapping("/{id}/missed")
+@PreAuthorize("hasRole('DOCTOR')")
+public ResponseEntity<ApiResponse<AppointmentResponse>> markMissed(
+        @PathVariable Long id) {
+
+    AppointmentResponse response =
+            appointmentService.markMissed(id);
+
+    return ResponseEntity.ok(
+            ApiResponse.success(
+                    "Appointment marked as missed.",
+                    response));
+
+}
+
+@GetMapping("/{id}")
+@PreAuthorize("hasRole('DOCTOR')")
+public ResponseEntity<ApiResponse<AppointmentResponse>> getAppointment(
+        @PathVariable Long id) {
+
+    return ResponseEntity.ok(
+
+            ApiResponse.success(
+
+                    "Appointment retrieved successfully.",
+
+                    appointmentService.getAppointment(id)
+
+            )
+
+    );
+
+}
+
+    /**
      * Doctor cancels appointment
      */
-    @Operation(
-            summary = "Cancel Appointment",
-            description = "Cancels an appointment.")
-    @ApiResponses({
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Appointment cancelled successfully"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Appointment not found")
-    })
     @PatchMapping("/{id}/cancel")
     @PreAuthorize("hasRole('DOCTOR')")
     public ResponseEntity<ApiResponse<AppointmentResponse>> cancelAppointment(
@@ -173,13 +230,6 @@ public class AppointmentController {
     /**
      * Doctor deletes appointment
      */
-    @Operation(
-            summary = "Delete Appointment",
-            description = "Soft deletes an appointment.")
-    @ApiResponses({
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Appointment deleted successfully"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Appointment not found")
-    })
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('DOCTOR')")
     public ResponseEntity<ApiResponse<Void>> deleteAppointment(
@@ -192,4 +242,45 @@ public class AppointmentController {
                         "Appointment deleted successfully.",
                         null));
     }
+
+    @GetMapping("/mother/{motherId}")
+@PreAuthorize("hasRole('DOCTOR')")
+public ResponseEntity<ApiResponse<List<AppointmentResponse>>> getMotherAppointments(
+        @PathVariable Long motherId) {
+
+    return ResponseEntity.ok(
+
+            ApiResponse.success(
+
+                    "Mother appointments retrieved successfully.",
+
+                    appointmentService.getMotherAppointments(motherId)
+
+            )
+
+    );
+
+}
+
+/**
+ * Get next appointment
+ */
+@GetMapping("/next")
+@PreAuthorize("hasRole('MOTHER')")
+public ResponseEntity<ApiResponse<AppointmentResponse>> getNextAppointment(
+        Authentication authentication) {
+
+    CustomUserDetails userDetails =
+            (CustomUserDetails) authentication.getPrincipal();
+
+    AppointmentResponse response =
+            appointmentService.getNextAppointment(
+                    userDetails.getUsername());
+
+    return ResponseEntity.ok(
+            ApiResponse.success(
+                    "Next appointment retrieved successfully.",
+                    response));
+}
+
 }

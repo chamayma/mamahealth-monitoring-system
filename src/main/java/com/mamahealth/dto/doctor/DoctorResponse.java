@@ -20,4 +20,5 @@ public class DoctorResponse {
     private Integer yearsOfExperience;
 
     private String email;
+    private Boolean active;
 }

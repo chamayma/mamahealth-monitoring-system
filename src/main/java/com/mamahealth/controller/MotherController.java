@@ -1,5 +1,7 @@
 package com.mamahealth.controller;
 
+import java.util.List;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -13,21 +15,11 @@ import com.mamahealth.dto.mother.MotherResponse;
 import com.mamahealth.security.CustomUserDetails;
 import com.mamahealth.service.MotherService;
 
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
-import io.swagger.v3.oas.annotations.tags.Tag;
-
 import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/v1/mothers")
 @Validated
-@PreAuthorize("hasRole('MOTHER')")
-@Tag(
-        name = "Mother Management",
-        description = "APIs for managing mother profiles")
-@SecurityRequirement(name = "Bearer Authentication")
 public class MotherController {
 
     private final MotherService motherService;
@@ -36,16 +28,8 @@ public class MotherController {
         this.motherService = motherService;
     }
 
-    @Operation(
-            summary = "Create Mother Profile",
-            description = "Creates a profile for the authenticated mother.")
-    @ApiResponses({
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "Mother profile created successfully"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Validation failed"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "409", description = "Mother profile already exists")
-    })
     @PostMapping
+    @PreAuthorize("hasRole('MOTHER')")
     public ResponseEntity<ApiResponse<MotherResponse>> createProfile(
             @Valid @RequestBody CreateMotherRequest request,
             Authentication authentication) {
@@ -64,15 +48,8 @@ public class MotherController {
                         response));
     }
 
-    @Operation(
-            summary = "Get My Profile",
-            description = "Returns the authenticated mother's profile.")
-    @ApiResponses({
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Profile retrieved successfully"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Mother profile not found")
-    })
     @GetMapping("/me")
+    @PreAuthorize("hasRole('MOTHER')")
     public ResponseEntity<ApiResponse<MotherResponse>> getMyProfile(
             Authentication authentication) {
 
@@ -89,16 +66,8 @@ public class MotherController {
                         response));
     }
 
-    @Operation(
-            summary = "Update My Profile",
-            description = "Updates the authenticated mother's profile.")
-    @ApiResponses({
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Profile updated successfully"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Validation failed"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Mother profile not found")
-    })
     @PutMapping("/me")
+    @PreAuthorize("hasRole('MOTHER')")
     public ResponseEntity<ApiResponse<MotherResponse>> updateMyProfile(
             Authentication authentication,
             @Valid @RequestBody CreateMotherRequest request) {
@@ -117,15 +86,8 @@ public class MotherController {
                         response));
     }
 
-    @Operation(
-            summary = "Delete My Profile",
-            description = "Soft deletes the authenticated mother's profile.")
-    @ApiResponses({
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Profile deleted successfully"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Mother profile not found")
-    })
     @DeleteMapping("/me")
+    @PreAuthorize("hasRole('MOTHER')")
     public ResponseEntity<ApiResponse<Void>> deleteMyProfile(
             Authentication authentication) {
 
@@ -140,4 +102,44 @@ public class MotherController {
                         "Mother profile deleted successfully.",
                         null));
     }
+
+    @GetMapping("/all")
+@PreAuthorize("hasRole('DOCTOR')")
+public ResponseEntity<ApiResponse<List<MotherResponse>>> getAllMothers() {
+
+    return ResponseEntity.ok(
+
+            ApiResponse.success(
+
+                    "Mothers retrieved successfully.",
+
+                    motherService.getAllMothers()
+
+            )
+
+    );
+
+}
+
+@GetMapping("/{id}")
+@PreAuthorize("hasRole('DOCTOR')")
+public ResponseEntity<ApiResponse<MotherResponse>> getMotherById(
+        @PathVariable Long id) {
+
+    MotherResponse response =
+            motherService.getMotherById(id);
+
+    return ResponseEntity.ok(
+
+            ApiResponse.success(
+
+                    "Mother retrieved successfully.",
+
+                    response
+
+            )
+
+    );
+
+}
 }

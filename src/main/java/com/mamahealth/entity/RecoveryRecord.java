@@ -4,7 +4,9 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 import jakarta.persistence.*;
+import lombok.Data;
 
+@Data
 @Entity
 @Table(name = "recovery_records")
 public class RecoveryRecord {
@@ -53,6 +55,9 @@ public class RecoveryRecord {
     @Column(nullable = false)
     private Boolean active = true;
 
+    private RecoveryIndicator recoveryIndicator;
+
+
     @PrePersist
     public void prePersist() {
         createdAt = LocalDateTime.now();
@@ -64,102 +69,4 @@ public class RecoveryRecord {
         updatedAt = LocalDateTime.now();
     }
 
-    public RecoveryRecord() {
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public Mother getMother() {
-        return mother;
-    }
-
-    public void setMother(Mother mother) {
-        this.mother = mother;
-    }
-
-    public LocalDate getRecordDate() {
-        return recordDate;
-    }
-
-    public void setRecordDate(LocalDate recordDate) {
-        this.recordDate = recordDate;
-    }
-
-    public Integer getPainLevel() {
-        return painLevel;
-    }
-
-    public void setPainLevel(Integer painLevel) {
-        this.painLevel = painLevel;
-    }
-
-    public Double getBodyTemperature() {
-        return bodyTemperature;
-    }
-
-    public void setBodyTemperature(Double bodyTemperature) {
-        this.bodyTemperature = bodyTemperature;
-    }
-
-    public WoundCondition getWoundCondition() {
-        return woundCondition;
-    }
-
-    public void setWoundCondition(WoundCondition woundCondition) {
-        this.woundCondition = woundCondition;
-    }
-
-    public BleedingLevel getBleedingLevel() {
-        return bleedingLevel;
-    }
-
-    public void setBleedingLevel(BleedingLevel bleedingLevel) {
-        this.bleedingLevel = bleedingLevel;
-    }
-
-    public Mobility getMobility() {
-        return mobility;
-    }
-
-    public void setMobility(Mobility mobility) {
-        this.mobility = mobility;
-    }
-
-    public Boolean getMedicationTaken() {
-        return medicationTaken;
-    }
-
-    public void setMedicationTaken(Boolean medicationTaken) {
-        this.medicationTaken = medicationTaken;
-    }
-
-    public String getNotes() {
-        return notes;
-    }
-
-    public void setNotes(String notes) {
-        this.notes = notes;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public Boolean getActive() {
-        return active;
-    }
-
-    public void setActive(Boolean active) {
-        this.active = active;
-    }
 }

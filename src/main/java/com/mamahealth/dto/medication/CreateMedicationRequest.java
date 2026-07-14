@@ -5,8 +5,11 @@ import java.time.LocalDate;
 import jakarta.validation.constraints.FutureOrPresent;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
+import lombok.Data;
 
+@Data
 public class CreateMedicationRequest {
 
     @NotNull(message = "Mother ID is required")
@@ -14,14 +17,17 @@ public class CreateMedicationRequest {
 
     @NotBlank(message = "Medication name is required")
     @Size(max = 100)
+    @Pattern(regexp = "^[\\p{L}0-9 .,'()\\-]+$", message = "Medication name must be valid text")
     private String medicationName;
 
     @NotBlank(message = "Dosage is required")
     @Size(max = 100)
+    @Pattern(regexp = "^[\\p{L}0-9 .,'()\\-]+$", message = "Dosage must be valid text")
     private String dosage;
 
     @NotBlank(message = "Frequency is required")
     @Size(max = 100)
+    @Pattern(regexp = "^[\\p{L}0-9 /,.'()\\-]+$", message = "Frequency must be valid text")
     private String frequency;
 
     @NotNull(message = "Start date is required")
@@ -32,64 +38,7 @@ public class CreateMedicationRequest {
     private LocalDate endDate;
 
     @Size(max = 1000)
+    @Pattern(regexp = "^[\\p{L}0-9 .,'()\\-]*$", message = "Instructions must be valid text")
     private String instructions;
 
-    public CreateMedicationRequest() {
-    }
-
-    public Long getMotherId() {
-        return motherId;
-    }
-
-    public void setMotherId(Long motherId) {
-        this.motherId = motherId;
-    }
-
-    public String getMedicationName() {
-        return medicationName;
-    }
-
-    public void setMedicationName(String medicationName) {
-        this.medicationName = medicationName;
-    }
-
-    public String getDosage() {
-        return dosage;
-    }
-
-    public void setDosage(String dosage) {
-        this.dosage = dosage;
-    }
-
-    public String getFrequency() {
-        return frequency;
-    }
-
-    public void setFrequency(String frequency) {
-        this.frequency = frequency;
-    }
-
-    public LocalDate getStartDate() {
-        return startDate;
-    }
-
-    public void setStartDate(LocalDate startDate) {
-        this.startDate = startDate;
-    }
-
-    public LocalDate getEndDate() {
-        return endDate;
-    }
-
-    public void setEndDate(LocalDate endDate) {
-        this.endDate = endDate;
-    }
-
-    public String getInstructions() {
-        return instructions;
-    }
-
-    public void setInstructions(String instructions) {
-        this.instructions = instructions;
-    }
 }

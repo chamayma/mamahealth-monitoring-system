@@ -5,6 +5,7 @@ import java.util.Map;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -35,6 +36,17 @@ public ResponseEntity<ApiResponse<Void>> handleValidationException(
                     "Validation failed",
                     errors));
 }
+
+    /**
+     * Malformed or invalid request payload
+     */
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ApiResponse<Void>> handleInvalidPayload(
+            HttpMessageNotReadableException ex) {
+
+        return ResponseEntity.badRequest()
+                .body(ApiResponse.error("Invalid request payload. Please provide the correct data types."));
+    }
 
     /**
      * Resource Not Found
