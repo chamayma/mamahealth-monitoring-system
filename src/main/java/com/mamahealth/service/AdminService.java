@@ -253,4 +253,11 @@ public List<ActivityResponse> getRecentActivities() {
     return motherMapper.toResponse(mother);
 
 }
+
+    public void promoteUser(String email, String roleStr) {
+        com.mamahealth.entity.User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        user.setRole(com.mamahealth.entity.Role.valueOf(roleStr.toUpperCase()));
+        userRepository.save(user);
+    }
 }

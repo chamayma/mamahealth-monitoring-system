@@ -19,7 +19,7 @@ import jakarta.validation.Valid;
 @RestController
 @RequestMapping("/api/v1/doctors")
 @Validated
-@PreAuthorize("hasRole('ADMIN')")
+@PreAuthorize("hasAnyRole('ADMIN', 'DOCTOR')")
 public class DoctorController {
 
     private final DoctorService doctorService;

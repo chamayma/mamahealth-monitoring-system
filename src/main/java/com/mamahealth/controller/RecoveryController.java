@@ -124,7 +124,7 @@ public class RecoveryController {
     }
 
     @GetMapping("/mother/{motherId}")
-@PreAuthorize("hasRole('DOCTOR')")
+@PreAuthorize("hasAnyRole('ADMIN', 'DOCTOR')")
 public ResponseEntity<ApiResponse<List<RecoveryResponse>>> getMotherRecoveryHistory(
         @PathVariable Long motherId) {
 

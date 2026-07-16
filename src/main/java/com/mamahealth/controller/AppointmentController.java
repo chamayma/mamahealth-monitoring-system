@@ -244,7 +244,7 @@ public ResponseEntity<ApiResponse<AppointmentResponse>> getAppointment(
     }
 
     @GetMapping("/mother/{motherId}")
-@PreAuthorize("hasRole('DOCTOR')")
+@PreAuthorize("hasAnyRole('ADMIN', 'DOCTOR')")
 public ResponseEntity<ApiResponse<List<AppointmentResponse>>> getMotherAppointments(
         @PathVariable Long motherId) {
 

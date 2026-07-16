@@ -134,7 +134,7 @@ public ResponseEntity<ApiResponse<List<MedicationResponse>>> getRecentMedication
  * Doctor views medications of one mother
  */
 @GetMapping("/mother/{motherId}")
-@PreAuthorize("hasRole('DOCTOR')")
+@PreAuthorize("hasAnyRole('ADMIN', 'DOCTOR')")
 public ResponseEntity<ApiResponse<List<MedicationResponse>>> getMotherMedications(
         @PathVariable Long motherId) {
 
