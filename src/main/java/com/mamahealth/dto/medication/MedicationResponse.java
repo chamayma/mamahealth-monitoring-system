@@ -40,4 +40,12 @@ public class MedicationResponse {
 
     private LocalDateTime createdAt;
 
+    public String getName() {
+        return medicationName;
+    }
+
+    public void setName(String name) {
+        this.medicationName = name;
+    }
+
 }

@@ -41,4 +41,12 @@ public class CreateMedicationRequest {
     @Pattern(regexp = "^[\\p{L}0-9 .,'()\\-]*$", message = "Instructions must be valid text")
     private String instructions;
 
+    public String getName() {
+        return this.medicationName;
+    }
+
+    public void setName(String name) {
+        this.medicationName = name;
+    }
+
 }
