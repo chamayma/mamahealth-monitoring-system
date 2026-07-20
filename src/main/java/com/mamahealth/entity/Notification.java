@@ -24,9 +24,9 @@ public class Notification {
     /**
  * Doctor who sent the notification
  */
-@ManyToOne(fetch = FetchType.LAZY)
-@JoinColumn(name = "doctor_id", nullable = false)
-private Doctor doctor;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "doctor_id", nullable = false)
+    private Doctor doctor;
 
     @Column(nullable = false)
     private String title;
