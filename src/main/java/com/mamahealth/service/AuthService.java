@@ -54,7 +54,11 @@ public class AuthService {
         user.setPassword(
                 passwordEncoder.encode(request.getPassword()));
 
-        user.setRole(Role.MOTHER);
+        if (request.getRole() != null && request.getRole().equalsIgnoreCase("DOCTOR")) {
+            user.setRole(Role.DOCTOR);
+        } else {
+            user.setRole(Role.MOTHER);
+        }
 
         userRepository.save(user);
 

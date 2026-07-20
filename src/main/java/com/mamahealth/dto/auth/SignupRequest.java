@@ -14,4 +14,6 @@ public class SignupRequest {
     @NotBlank(message = "Password is required")
     @Size(min = 8, message = "Password must be at least 8 characters")
     private String password;
+
+    private String role;
 }
